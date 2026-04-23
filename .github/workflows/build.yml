@@ -13,7 +13,7 @@ jobs:
         with:
           node-version: 20
           cache: "npm"
-          cache-dependency-path: solaever-wallet/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - name: Setup Java JDK
         uses: actions/setup-java@v4
@@ -22,14 +22,13 @@ jobs:
           distribution: 'zulu'
 
       - name: Install Dependencies
-        run: cd solaever-wallet && npm install --silent
+        run: npm install --silent
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
       - name: Generate JS Bundle
         run: |
-          cd solaever-wallet
           mkdir -p android/app/src/main/assets
           npx expo export:embed --platform android --dev false --bundle-output android/app/src/main/assets/index.android.bundle --assets-dest android/app/src/main/res
 
@@ -45,7 +44,7 @@ jobs:
 
       - name: Build Debug APK
         run: |
-          cd solaever-wallet/android
+          cd android
           chmod +x gradlew
           ./gradlew assembleDebug --no-daemon
 
@@ -53,4 +52,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: solaever-wallet-debug
-          path: solaever-wallet/android/app/build/outputs/apk/debug/app-debug.apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
