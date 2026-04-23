@@ -16,7 +16,7 @@ export async function sendSLE(
   try {
     const toPubkey = new PublicKey(toAddress);
     const lamports = Math.floor(amount * LAMPORTS_PER_SOL);
-    const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('processed');
+    const { blockhash } = await connection.getLatestBlockhash('processed');
 
     const transaction = new Transaction({
       feePayer: sender.publicKey,
@@ -59,7 +59,7 @@ export async function getBalance(address: string): Promise<number> {
   }
 }
 
-// 통합 트랜잭션 내역 조회 (안정성 강화 버전)
+// 통합 트랜잭션 내역 조회 (v1.3: 저장 및 동기화 최적화)
 export async function getTransactionHistory(address: string) {
   try {
     const owner = new PublicKey(address);
@@ -76,18 +76,28 @@ export async function getTransactionHistory(address: string) {
       console.warn("ATA fetch skipped or failed", e);
     }
 
-    // 내역 조회는 'confirmed' 단계를 사용하는 것이 표준입니다.
-    const commitment: Finality = 'confirmed';
-    const allSignaturesPromises = allAddresses.map(addr => 
-      connection.getSignaturesForAddress(new PublicKey(addr), { limit: 15 }, commitment)
-      .catch(() => [])
-    );
-    
+    // 'confirmed'로 안 오면 'processed'로라도 가져오기 위해 commitment를 유연하게 설정
+    const fetchSignatures = async (addr: string, commitment: Finality) => {
+      try {
+        return await connection.getSignaturesForAddress(new PublicKey(addr), { limit: 15 }, commitment);
+      } catch (e) {
+        return [];
+      }
+    };
+
+    const allSignaturesPromises = allAddresses.map(addr => fetchSignatures(addr, 'confirmed'));
     const results = await Promise.all(allSignaturesPromises);
-    const merged = results.flat();
+    let merged = results.flat();
+
+    // 만약 confirmed 결과가 너무 적으면 processed로 한 번 더 시도 (보강)
+    if (merged.length < 5) {
+      const processedPromises = allAddresses.map(addr => fetchSignatures(addr, 'processed'));
+      const processedResults = await Promise.all(processedPromises);
+      merged = [...merged, ...processedResults.flat()];
+    }
     
     const unique = Array.from(new Map(merged.map(item => [item.signature, item])).values());
-    return unique.sort((a, b) => (b.blockTime || 0) - (a.blockTime || 0)).slice(0, 20);
+    return unique.sort((a, b) => (b.blockTime || 0) - (a.blockTime || 0)).slice(0, 30);
     
   } catch (error: any) {
     console.error("Integrated History fetch failed:", error);

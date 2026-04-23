@@ -1,38 +1,53 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Linking, RefreshControl, ActivityIndicator } from 'react-native';
-import { RouteProp } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getTransactionHistory } from '../lib/transfer';
 
-type RootStackParamList = {
-  TxHistory: { address: string };
-};
-
-type TxHistoryScreenRouteProp = RouteProp<RootStackParamList, 'TxHistory'>;
-
-interface Props {
-  route: TxHistoryScreenRouteProp;
-}
-
-export default function TxHistoryScreen({ route }: Props) {
+export default function TxHistoryScreen({ route }: any) {
   const { address } = route.params;
   const [history, setHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  const fetchHistory = async () => {
-    const data = await getTransactionHistory(address);
-    setHistory(data);
-    setLoading(false);
-    setRefreshing(false);
+  // 1. 로컬에 저장된 히스토리 불러오기
+  const loadCachedHistory = async () => {
+    try {
+      const cached = await AsyncStorage.getItem(`history_${address}`);
+      if (cached) {
+        setHistory(JSON.parse(cached));
+      }
+    } catch (e) {
+      console.error("Failed to load cached history", e);
+    }
   };
 
+  // 2. 최신 히스토리 서버에서 가져오기 및 저장
+  const fetchHistory = useCallback(async (isSilent = false) => {
+    if (!isSilent) setLoading(true);
+    
+    const data = await getTransactionHistory(address);
+    
+    if (data && data.length > 0) {
+      setHistory(data);
+      // 기기에 영구 저장
+      await AsyncStorage.setItem(`history_${address}`, JSON.stringify(data));
+    }
+    
+    setLoading(false);
+    setRefreshing(false);
+  }, [address]);
+
   useEffect(() => {
-    fetchHistory();
-  }, []);
+    const init = async () => {
+      await loadCachedHistory(); // 캐시 먼저 표시
+      await fetchHistory();      // 그 다음 서버 동기화
+    };
+    init();
+  }, [fetchHistory]);
 
   const onRefresh = () => {
     setRefreshing(true);
-    fetchHistory();
+    fetchHistory(true);
   };
 
   const openExplorer = (signature: string) => {
@@ -57,92 +72,35 @@ export default function TxHistoryScreen({ route }: Props) {
     </TouchableOpacity>
   );
 
-  if (loading) {
-    return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color="#007AFF" />
-      </View>
-    );
-  }
-
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Transaction History</Text>
-      <FlatList
-        data={history}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.signature}
-        contentContainerStyle={styles.list}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-        ListEmptyComponent={
-          <Text style={styles.empty}>No transactions found.</Text>
-        }
-      />
+      {loading && history.length === 0 ? (
+        <View style={styles.center}><ActivityIndicator size="large" color="#007AFF" /></View>
+      ) : (
+        <FlatList
+          data={history}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.signature}
+          contentContainerStyle={styles.list}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+          ListEmptyComponent={<Text style={styles.empty}>No transactions found.</Text>}
+        />
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f8f9fa',
-    padding: 20,
-  },
-  center: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginTop: 40,
-    marginBottom: 20,
-  },
-  list: {
-    paddingBottom: 20,
-  },
-  item: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 15,
-    marginBottom: 15,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  itemHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  status: {
-    fontWeight: 'bold',
-    fontSize: 14,
-  },
-  date: {
-    fontSize: 12,
-    color: '#8e8e93',
-  },
-  signature: {
-    fontSize: 14,
-    color: '#3a3a3c',
-    fontFamily: 'monospace',
-    marginBottom: 8,
-  },
-  explorerLink: {
-    fontSize: 12,
-    color: '#007AFF',
-    fontWeight: '600',
-    textAlign: 'right',
-  },
-  empty: {
-    textAlign: 'center',
-    marginTop: 50,
-    color: '#8e8e93',
-  },
+  container: { flex: 1, backgroundColor: '#f8f9fa', padding: 20 },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  title: { fontSize: 24, fontWeight: 'bold', marginTop: 40, marginBottom: 20 },
+  list: { paddingBottom: 20 },
+  item: { backgroundColor: '#fff', borderRadius: 12, padding: 15, marginBottom: 15, elevation: 2 },
+  itemHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
+  status: { fontWeight: 'bold', fontSize: 14 },
+  date: { fontSize: 12, color: '#8e8e93' },
+  signature: { fontSize: 14, color: '#3a3a3c', fontFamily: 'monospace', marginBottom: 8 },
+  explorerLink: { fontSize: 12, color: '#007AFF', fontWeight: '600', textAlign: 'right' },
+  empty: { textAlign: 'center', marginTop: 50, color: '#8e8e93' }
 });
