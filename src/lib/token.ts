@@ -32,15 +32,13 @@ export async function sendSPLToken(
   const mint = new PublicKey(mintAddress);
   const toPubkey = new PublicKey(toAddress);
   
-  // 1. 민트 정보 및 계정 확보를 동시에 진행하거나 최소한의 commitment 사용
   const mintInfo = await getMint(connection, mint, 'processed');
   const rawAmount = Math.floor(amount * Math.pow(10, mintInfo.decimals));
 
-  // 2. ATA 확보 (이미 있으면 매우 빠름)
-  const fromAta = await getOrCreateAssociatedTokenAccount(connection, sender, mint, sender.publicKey, { commitment: 'processed' });
-  const toAta = await getOrCreateAssociatedTokenAccount(connection, sender, mint, toPubkey, { commitment: 'processed' });
+  // 타입 오류 수정: 5번째 인자는 boolean (allowOwnerOffCurve), 6번째가 commitment입니다.
+  const fromAta = await getOrCreateAssociatedTokenAccount(connection, sender, mint, sender.publicKey, false, 'processed');
+  const toAta = await getOrCreateAssociatedTokenAccount(connection, sender, mint, toPubkey, false, 'processed');
 
-  // 3. 트랜잭션 전송 (최적화)
   const { blockhash } = await connection.getLatestBlockhash('processed');
   const transaction = new Transaction({
     feePayer: sender.publicKey,
@@ -50,17 +48,16 @@ export async function sendSPLToken(
   );
 
   const signature = await connection.sendTransaction(transaction, [sender], { 
-    skipPreflight: true, // 사전 검사를 건너뛰어 속도 향상
+    skipPreflight: true,
     preflightCommitment: 'processed' 
   });
 
-  // 4. 수동 고속 체크
   for (let i = 0; i < 15; i++) {
     const status = await connection.getSignatureStatus(signature);
     if (status.value?.confirmationStatus === 'processed' || status.value?.confirmationStatus === 'confirmed') {
       return signature;
     }
-    await new Promise(r => setTimeout(r, 1000)); // 1초 간격으로 확인
+    await new Promise(r => setTimeout(r, 1000));
   }
 
   return signature;
