@@ -6,8 +6,8 @@ import { keypairFromMnemonic } from '../lib/wallet';
 import { getBalance } from '../lib/transfer';
 import { getTokenBalance } from '../lib/token';
 
-// 이미지 자산 정의
-const TOKEN_LOGO = require('../../assets/solaever_token.png');
+// 검증된 앱 로고 이미지 자산
+const MAIN_APP_LOGO = require('../../assets/solaever_app.png');
 
 export default function HomeScreen({ navigation, route }: any) {
   const { mnemonic } = route.params;
@@ -66,8 +66,12 @@ export default function HomeScreen({ navigation, route }: any) {
         <View style={styles.headerLeft}>
           <View style={styles.titleContainer}>
             <Text style={styles.title}>SolaEver</Text>
-            {/* [검증용] 제목 오른쪽 로고 배치 */}
-            <Image source={TOKEN_LOGO} style={styles.headerLogo} resizeMode="contain" />
+            {/* 제목 오른쪽 로고 (검증 완료된 이미지 사용) */}
+            <Image 
+              source={MAIN_APP_LOGO} 
+              style={styles.headerLogo} 
+              resizeMode="contain" 
+            />
           </View>
         </View>
         <View style={styles.headerRight}>
@@ -83,12 +87,14 @@ export default function HomeScreen({ navigation, route }: any) {
       <View style={styles.card}>
         <Text style={styles.label}>NATIVE BALANCE</Text>
         <View style={styles.balanceRow}>
-          {/* 하얀색 배경 박스를 제거하고 이미지만 직접 띄움 */}
-          <Image 
-            source={TOKEN_LOGO} 
-            style={styles.cardTokenLogo}
-            resizeMode="contain"
-          />
+          <View style={styles.tokenLogoContainer}>
+            {/* 잔고 왼쪽 로고 (검증 완료된 이미지 사용) */}
+            <Image 
+              source={MAIN_APP_LOGO} 
+              style={styles.cardTokenLogo}
+              resizeMode="contain"
+            />
+          </View>
           <Text style={styles.balance}>{balance !== null ? `${balance.toLocaleString()} SLE` : '---'}</Text>
         </View>
         <View style={styles.addressRow}>
@@ -120,6 +126,7 @@ export default function HomeScreen({ navigation, route }: any) {
         </TouchableOpacity>
       </View>
 
+      {/* 모달 로직 (이전과 동일) */}
       <Modal visible={isMnemonicVisible} transparent animationType="fade">
         <View style={styles.modalBg}>
           <View style={styles.modalContent}>
@@ -166,37 +173,38 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 40, marginBottom: 20 },
   headerLeft: { flex: 1 },
   titleContainer: { flexDirection: 'row', alignItems: 'center' },
-  title: { fontSize: 24, fontWeight: 'bold', marginRight: 8 },
-  headerLogo: { width: 24, height: 24 },
+  title: { fontSize: 24, fontWeight: 'bold', marginRight: 10, color: '#333' },
+  headerLogo: { width: 30, height: 30 },
   headerRight: { flexDirection: 'row', alignItems: 'center' },
-  logoutText: { color: '#ff3b30', marginLeft: 15 },
+  logoutText: { color: '#ff3b30', marginLeft: 15, fontWeight: '600' },
   mnemonicBtn: { backgroundColor: '#e8f5e9', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 5 },
   mnemonicBtnText: { color: '#34c759', fontSize: 12, fontWeight: 'bold' },
-  card: { backgroundColor: '#34c759', borderRadius: 20, padding: 25, marginBottom: 30, elevation: 5 },
-  label: { fontSize: 12, color: 'rgba(255,255,255,0.7)', marginBottom: 15 },
+  card: { backgroundColor: '#34c759', borderRadius: 20, padding: 25, marginBottom: 30, elevation: 8, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 10 },
+  label: { fontSize: 12, color: 'rgba(255,255,255,0.7)', marginBottom: 15, fontWeight: '600' },
   balanceRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
-  cardTokenLogo: { width: 32, height: 32, marginRight: 12 },
+  tokenLogoContainer: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#fff', justifyContent: 'center', alignItems: 'center', marginRight: 15, overflow: 'hidden', elevation: 2 },
+  cardTokenLogo: { width: 30, height: 30 },
   balance: { fontSize: 32, fontWeight: 'bold', color: '#fff' },
   addressRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.2)', paddingTop: 15 },
   address: { flex: 1, fontSize: 12, color: 'rgba(255,255,255,0.8)', fontFamily: 'monospace', marginRight: 10 },
   copyBtn: { backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 5 },
   copyBtnText: { color: '#fff', fontSize: 12, fontWeight: 'bold' },
-  sectionTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 15 },
-  tokenItem: { flexDirection: 'row', justifyContent: 'space-between', backgroundColor: '#fff', padding: 15, borderRadius: 12, marginBottom: 10 },
+  sectionTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 15, color: '#333' },
+  tokenItem: { flexDirection: 'row', justifyContent: 'space-between', backgroundColor: '#fff', padding: 15, borderRadius: 12, marginBottom: 10, elevation: 1 },
   tokenMint: { fontSize: 14, color: '#666' },
   tokenBalance: { fontSize: 16, fontWeight: 'bold' },
-  addBtn: { alignItems: 'center', padding: 10 },
+  addBtn: { alignItems: 'center', padding: 10, marginBottom: 20 },
   addBtnText: { color: '#34c759', fontWeight: 'bold' },
-  actions: { marginTop: 20 },
+  actions: { marginTop: 10 },
   actionButton: { backgroundColor: '#34c759', padding: 18, borderRadius: 15, alignItems: 'center' },
   actionButtonText: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
-  historyButton: { borderWidth: 1, borderColor: '#34c759', padding: 15, borderRadius: 15, alignItems: 'center', marginTop: 10 },
+  historyButton: { borderWidth: 1, borderColor: '#34c759', padding: 15, borderRadius: 15, alignItems: 'center', marginTop: 15 },
   historyButtonText: { color: '#34c759', fontWeight: 'bold' },
-  modalBg: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 20 },
-  modalContent: { backgroundColor: '#fff', borderRadius: 20, padding: 25 },
-  modalTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 15 },
-  mnemonicBox: { backgroundColor: '#f0f0f0', padding: 15, borderRadius: 10, marginBottom: 20 },
-  mnemonicText: { fontSize: 16, color: '#333', lineHeight: 24, textAlign: 'center' },
-  input: { borderWidth: 1, borderColor: '#ddd', borderRadius: 10, padding: 15, marginBottom: 20 },
-  cancelBtn: { alignItems: 'center', marginTop: 15 }
+  modalBg: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', padding: 25 },
+  modalContent: { backgroundColor: '#fff', borderRadius: 25, padding: 30, elevation: 20 },
+  modalTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
+  mnemonicBox: { backgroundColor: '#f8f9fa', padding: 20, borderRadius: 15, marginBottom: 25, borderWidth: 1, borderColor: '#eee' },
+  mnemonicText: { fontSize: 17, color: '#333', lineHeight: 26, textAlign: 'center', fontWeight: '500' },
+  input: { borderWidth: 1, borderColor: '#ddd', borderRadius: 12, padding: 15, marginBottom: 25, fontSize: 16 },
+  cancelBtn: { alignItems: 'center', marginTop: 20, padding: 10 }
 });
