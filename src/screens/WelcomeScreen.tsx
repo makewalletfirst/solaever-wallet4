@@ -58,7 +58,7 @@ const styles = StyleSheet.create({
     marginBottom: 50,
   },
   button: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#34c759',
     paddingVertical: 15,
     paddingHorizontal: 30,
     borderRadius: 10,
@@ -74,10 +74,10 @@ const styles = StyleSheet.create({
   secondaryButton: {
     backgroundColor: '#fff',
     borderWidth: 1,
-    borderColor: '#007AFF',
+    borderColor: '#34c759',
   },
   secondaryButtonText: {
-    color: '#007AFF',
+    color: '#34c759',
     fontSize: 18,
     fontWeight: '600',
   },

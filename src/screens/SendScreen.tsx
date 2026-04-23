@@ -100,11 +100,11 @@ const styles = StyleSheet.create({
   label: { fontSize: 14, fontWeight: 'bold', color: '#666', marginBottom: 10 },
   assetSelector: { flexDirection: 'row', flexWrap: 'wrap', marginBottom: 20 },
   assetOption: { padding: 10, borderWidth: 1, borderColor: '#ddd', borderRadius: 8, marginRight: 10, marginBottom: 10 },
-  selectedAsset: { backgroundColor: '#007AFF', borderColor: '#007AFF' },
+  selectedAsset: { backgroundColor: '#34c759', borderColor: '#34c759' },
   selectedText: { color: '#fff', fontWeight: 'bold' },
   inputGroup: { marginBottom: 20 },
   input: { borderWidth: 1, borderColor: '#ddd', borderRadius: 10, padding: 15, fontSize: 16, backgroundColor: '#f9f9f9' },
-  button: { backgroundColor: '#007AFF', padding: 18, borderRadius: 15, alignItems: 'center', marginTop: 20 },
+  button: { backgroundColor: '#34c759', padding: 18, borderRadius: 15, alignItems: 'center', marginTop: 20 },
   disabled: { backgroundColor: '#ccc' },
   buttonText: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
   cancelButton: { alignItems: 'center', marginTop: 20 }
