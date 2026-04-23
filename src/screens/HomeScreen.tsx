@@ -6,6 +6,9 @@ import { keypairFromMnemonic } from '../lib/wallet';
 import { getBalance } from '../lib/transfer';
 import { getTokenBalance } from '../lib/token';
 
+// 이미지 자산을 명시적으로 require
+const SOLAEVER_TOKEN_IMAGE = require('../../assets/solaever_token.png');
+
 export default function HomeScreen({ navigation, route }: any) {
   const { mnemonic } = route.params;
   const [address, setAddress] = useState('');
@@ -83,7 +86,11 @@ export default function HomeScreen({ navigation, route }: any) {
       <View style={styles.card}>
         <Text style={styles.label}>NATIVE BALANCE</Text>
         <View style={styles.balanceRow}>
-          <Image source={require('../../assets/solaever_token.png')} style={styles.tokenLogo} />
+          <Image 
+            source={SOLAEVER_TOKEN_IMAGE} 
+            style={styles.tokenLogo}
+            resizeMode="contain" 
+          />
           <Text style={styles.balance}>{balance !== null ? `${balance.toLocaleString()} SLE` : '---'}</Text>
         </View>
         <View style={styles.addressRow}>
@@ -137,7 +144,7 @@ const styles = StyleSheet.create({
   card: { backgroundColor: '#34c759', borderRadius: 20, padding: 25, marginBottom: 30, elevation: 5 },
   label: { fontSize: 12, color: 'rgba(255,255,255,0.7)', marginBottom: 10 },
   balanceRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 15 },
-  tokenLogo: { width: 32, height: 32, marginRight: 10, borderRadius: 16 },
+  tokenLogo: { width: 32, height: 32, marginRight: 10, borderRadius: 16, backgroundColor: '#fff' },
   balance: { fontSize: 32, fontWeight: 'bold', color: '#fff' },
   addressRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.2)', paddingTop: 15 },
   address: { flex: 1, fontSize: 12, color: 'rgba(255,255,255,0.8)', fontFamily: 'monospace', marginRight: 10 },
