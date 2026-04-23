@@ -12,7 +12,6 @@ import { getTokenBalance, getTokenInfo } from '../lib/token';
 import { setCurrentWallet, getCurrentWallet } from '../lib/keystore';
 
 const TOKEN_LOGO_NATIVE = { uri: 'token_logo' };
-const SCREEN_HEIGHT = Dimensions.get('window').height;
 
 export default function HomeScreen({ navigation, route }: any) {
   const { mnemonic } = route.params;
@@ -21,12 +20,14 @@ export default function HomeScreen({ navigation, route }: any) {
   const [tokens, setTokens] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   
+  // Modals
   const [isAddTokenModalVisible, setAddTokenModalVisible] = useState(false);
   const [isMnemonicVisible, setMnemonicVisible] = useState(false);
   const [isReceiveModalVisible, setReceiveModalVisible] = useState(false);
   const [isPassModalVisible, setPassModalVisible] = useState(false);
   const [selectedToken, setSelectedToken] = useState<any>(null);
   
+  // States
   const [newTokenMint, setNewTokenMint] = useState('');
   const [inputPass, setInputPass] = useState('');
   const [isScannerVisible, setScannerVisible] = useState(false);
@@ -102,20 +103,16 @@ export default function HomeScreen({ navigation, route }: any) {
   const handleAddToken = async () => {
     if (!newTokenMint) return;
     try {
-      // 주소 규격 검사
       new PublicKey(newTokenMint);
     } catch (e) {
       Alert.alert('에러', '유효한 솔라나 토큰 주소가 아닙니다.');
       return;
     }
-
     const saved = await AsyncStorage.getItem(`tokens_${address}`);
     const mintList = saved ? JSON.parse(saved) : [];
     if (!mintList.includes(newTokenMint)) {
       await AsyncStorage.setItem(`tokens_${address}`, JSON.stringify([...mintList, newTokenMint]));
-      setNewTokenMint('');
-      setAddTokenModalVisible(false);
-      loadWallet();
+      setNewTokenMint(''); setAddTokenModalVisible(false); loadWallet();
     } else {
       Alert.alert('알림', '이미 추가된 토큰입니다.');
     }
@@ -188,7 +185,6 @@ export default function HomeScreen({ navigation, route }: any) {
       </View>
 
       <Text style={styles.sectionTitle}>My Tokens</Text>
-      {/* 고정 높이와 스크롤 도입: 하단 버튼이 밀리지 않도록 함 */}
       <View style={styles.tokenListWrapper}>
         <ScrollView nestedScrollEnabled={true}>
           {tokens.length === 0 ? (
@@ -236,18 +232,26 @@ export default function HomeScreen({ navigation, route }: any) {
 
       {/* Token Detail Modal */}
       <Modal visible={!!selectedToken} transparent animationType="slide" onRequestClose={() => setSelectedToken(null)}>
-        <View style={styles.modalBg}><View style={[styles.modalContent, { minHeight: 350 }]}>
+        <View style={styles.modalBg}><View style={[styles.modalContent, { minHeight: 300 }]}>
             <Text style={styles.modalTitle}>Token Detail</Text>
-            <View style={styles.detailRow}><Text style={styles.detailLabel}>Name</Text><Text style={styles.detailValue}>{selectedToken?.name}</Text></View>
+            
+            <View style={[styles.detailRow, {flexDirection:'row', justifyContent:'space-between', alignItems:'center'}]}>
+              <View>
+                <Text style={styles.detailLabel}>Name</Text>
+                <Text style={styles.detailValue}>{selectedToken?.name}</Text>
+              </View>
+              {/* 삭제 버튼을 이름 우측에 배치 */}
+              <TouchableOpacity style={styles.miniDeleteBtn} onPress={() => deleteToken(selectedToken.mint)}>
+                <Text style={styles.miniDeleteBtnText}>Delete</Text>
+              </TouchableOpacity>
+            </View>
+
             <View style={styles.detailRow}><Text style={styles.detailLabel}>Symbol</Text><Text style={styles.detailValue}>{selectedToken?.symbol}</Text></View>
-            <View style={styles.detailRow}><Text style={styles.detailLabel}>Mint Address</Text><Text style={[styles.detailValue, { fontSize: 12 }]}>{selectedToken?.mint}</Text></View>
+            <View style={styles.detailRow}><Text style={styles.detailLabel}>Mint Address</Text><Text style={[styles.detailValue, { fontSize: 11 }]}>{selectedToken?.mint}</Text></View>
             <View style={styles.detailRow}><Text style={styles.detailLabel}>Balance</Text><Text style={[styles.detailValue, { fontWeight: 'bold', fontSize: 18 }]}>{selectedToken?.balance?.toLocaleString()} {selectedToken?.symbol}</Text></View>
             
-            <TouchableOpacity style={[styles.actionButton, {backgroundColor:'#ff3b30', marginBottom: 10}]} onPress={() => deleteToken(selectedToken.mint)}>
-              <Text style={styles.actionButtonText}>Delete Token</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.historyButton} onPress={() => openTokenExplorer(selectedToken.mint)}>
-              <Text style={styles.historyButtonText}>View on Explorer</Text>
+            <TouchableOpacity style={styles.actionButton} onPress={() => openTokenExplorer(selectedToken.mint)}>
+              <Text style={styles.actionButtonText}>View on Explorer</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.cancelBtn} onPress={() => setSelectedToken(null)}><Text>Close</Text></TouchableOpacity>
         </View></View>
@@ -277,17 +281,11 @@ export default function HomeScreen({ navigation, route }: any) {
         </View>
       </Modal>
 
-      {/* Password Modal (Qwerty Keyboard) */}
+      {/* Password Modal */}
       <Modal visible={isPassModalVisible} transparent animationType="fade" onRequestClose={() => setPassModalVisible(false)}>
         <View style={styles.modalBg}><View style={styles.modalContent}>
             <Text style={styles.modalTitle}>비밀번호 인증</Text>
-            <TextInput 
-              style={styles.input} 
-              placeholder="Password" 
-              secureTextEntry 
-              value={inputPass} 
-              onChangeText={setInputPass} 
-            />
+            <TextInput style={styles.input} placeholder="Password" secureTextEntry value={inputPass} onChangeText={setInputPass} />
             <TouchableOpacity style={styles.actionButton} onPress={verifyPassword}><Text style={styles.actionButtonText}>확인</Text></TouchableOpacity>
             <TouchableOpacity style={styles.cancelBtn} onPress={() => setPassModalVisible(false)}><Text>취소</Text></TouchableOpacity>
         </View></View>
@@ -329,7 +327,7 @@ const styles = StyleSheet.create({
   copyBtnText: { color: '#fff', fontSize: 12, fontWeight: 'bold' },
   sectionTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 15, color: '#333' },
   
-  tokenListWrapper: { maxHeight: 220, marginBottom: 10 }, // 약 3개 리스트 높이 제한
+  tokenListWrapper: { maxHeight: 150, marginBottom: 10 }, // 최대 2개만 보이도록 높이 축소
   tokenItem: { flexDirection: 'row', justifyContent: 'space-between', backgroundColor: '#fff', padding: 15, borderRadius: 12, marginBottom: 10, elevation: 1 },
   tokenSymbol: { fontSize: 16, fontWeight: 'bold', color: '#333' },
   tokenMint: { fontSize: 12, color: '#999' },
@@ -355,6 +353,8 @@ const styles = StyleSheet.create({
   detailRow: { marginBottom: 15 },
   detailLabel: { fontSize: 12, color: '#999', marginBottom: 2 },
   detailValue: { fontSize: 14, color: '#333' },
+  miniDeleteBtn: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, backgroundColor: '#fff2f2', borderWidth: 1, borderColor: '#ff3b30' },
+  miniDeleteBtnText: { color: '#ff3b30', fontSize: 12, fontWeight: 'bold' },
   labelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 },
   scannerContainer: { flex: 1, backgroundColor: '#000' },
   scannerOverlay: { flex: 1, justifyContent: 'flex-end', alignItems: 'center', paddingBottom: 50 },
