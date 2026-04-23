@@ -16,7 +16,8 @@ jobs:
           node-version: 20
 
       - name: Install Dependencies
-        run: npm install --legacy-peer-deps --no-audit --no-fund
+        run: |
+          npm install --force --no-audit --no-fund || (cat /home/runner/.npm/_logs/*-debug.log && exit 1)
           
-      - name: Typecheck
-        run: npx tsc --noEmit || echo "Typescript check finished with warnings"
+      - name: Run Build Check
+        run: npx tsc --noEmit || echo "Typescript check has warnings but continuing"
