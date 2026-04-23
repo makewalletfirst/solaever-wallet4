@@ -6,8 +6,8 @@ import { keypairFromMnemonic } from '../lib/wallet';
 import { getBalance } from '../lib/transfer';
 import { getTokenBalance } from '../lib/token';
 
-// 검증된 앱 로고 이미지 자산
-const MAIN_APP_LOGO = require('../../assets/solaever_app.png');
+// 네이티브 리소스 사용 (안드로이드 drawable 폴더에 직접 넣은 파일)
+const TOKEN_LOGO_NATIVE = { uri: 'token_logo' };
 
 export default function HomeScreen({ navigation, route }: any) {
   const { mnemonic } = route.params;
@@ -65,13 +65,13 @@ export default function HomeScreen({ navigation, route }: any) {
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <View style={styles.titleContainer}>
-            <Text style={styles.title}>SolaEver</Text>
-            {/* 제목 오른쪽 로고 (검증 완료된 이미지 사용) */}
+            {/* 제목 왼쪽: 테두리 없이 로고 이미지만 배치 */}
             <Image 
-              source={MAIN_APP_LOGO} 
+              source={TOKEN_LOGO_NATIVE} 
               style={styles.headerLogo} 
               resizeMode="contain" 
             />
+            <Text style={styles.title}>SolaEver</Text>
           </View>
         </View>
         <View style={styles.headerRight}>
@@ -87,10 +87,10 @@ export default function HomeScreen({ navigation, route }: any) {
       <View style={styles.card}>
         <Text style={styles.label}>NATIVE BALANCE</Text>
         <View style={styles.balanceRow}>
-          <View style={styles.tokenLogoContainer}>
-            {/* 잔고 왼쪽 로고 (검증 완료된 이미지 사용) */}
+          <View style={[styles.tokenLogoContainer, { borderWidth: 2, borderColor: '#fff' }]}>
+            {/* 잔고 왼쪽: 테두리가 강화된 컨테이너 내부의 로고 */}
             <Image 
-              source={MAIN_APP_LOGO} 
+              source={TOKEN_LOGO_NATIVE} 
               style={styles.cardTokenLogo}
               resizeMode="contain"
             />
@@ -172,18 +172,18 @@ const styles = StyleSheet.create({
   container: { padding: 20, backgroundColor: '#f8f9fa', flexGrow: 1 },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 40, marginBottom: 20 },
   headerLeft: { flex: 1 },
-  titleContainer: { flexDirection: 'row', alignItems: 'center' },
+  titleContainer: { flexDirection: 'row', alignItems: 'center', zIndex: 100 },
   title: { fontSize: 24, fontWeight: 'bold', marginRight: 10, color: '#333' },
-  headerLogo: { width: 30, height: 30 },
+  headerLogo: { width: 32, height: 32, marginRight: 10, zIndex: 102 },
   headerRight: { flexDirection: 'row', alignItems: 'center' },
   logoutText: { color: '#ff3b30', marginLeft: 15, fontWeight: '600' },
   mnemonicBtn: { backgroundColor: '#e8f5e9', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 5 },
   mnemonicBtnText: { color: '#34c759', fontSize: 12, fontWeight: 'bold' },
-  card: { backgroundColor: '#34c759', borderRadius: 20, padding: 25, marginBottom: 30, elevation: 8, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 10 },
+  card: { backgroundColor: '#34c759', borderRadius: 20, padding: 25, marginBottom: 30, elevation: 8, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 10, zIndex: 10, overflow: 'visible' },
   label: { fontSize: 12, color: 'rgba(255,255,255,0.7)', marginBottom: 15, fontWeight: '600' },
-  balanceRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
-  tokenLogoContainer: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#fff', justifyContent: 'center', alignItems: 'center', marginRight: 15, overflow: 'hidden', elevation: 2 },
-  cardTokenLogo: { width: 30, height: 30 },
+  balanceRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 20, zIndex: 11, overflow: 'visible' },
+  tokenLogoContainer: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#fff', justifyContent: 'center', alignItems: 'center', marginRight: 15, elevation: 2, zIndex: 12, overflow: 'visible' },
+  cardTokenLogo: { width: 36, height: 36, zIndex: 13 },
   balance: { fontSize: 32, fontWeight: 'bold', color: '#fff' },
   addressRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.2)', paddingTop: 15 },
   address: { flex: 1, fontSize: 12, color: 'rgba(255,255,255,0.8)', fontFamily: 'monospace', marginRight: 10 },
