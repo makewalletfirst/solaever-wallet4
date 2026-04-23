@@ -21,7 +21,6 @@ export default function WelcomeScreen({ navigation }: Props) {
   const [wallets, setWallets] = useState<WalletInfo[]>([]);
   const [loading, setLoading] = useState(true);
   
-  // Password Fallback States
   const [showPassModal, setShowPassModal] = useState(false);
   const [targetWallet, setInitialTarget] = useState<{wallet: WalletInfo, mode: 'login' | 'delete'} | null>(null);
   const [inputPass, setInputPass] = useState('');
@@ -54,7 +53,6 @@ export default function WelcomeScreen({ navigation }: Props) {
       }
     }
     
-    // Fallback to password
     setInitialTarget({ wallet, mode });
     setShowPassModal(true);
   };
@@ -134,7 +132,6 @@ export default function WelcomeScreen({ navigation }: Props) {
         </TouchableOpacity>
       </View>
 
-      {/* Password Modal */}
       <Modal visible={showPassModal} transparent animationType="slide" onRequestClose={() => setShowPassModal(false)}>
         <View style={styles.modalBg}>
           <View style={styles.modalContent}>
@@ -143,7 +140,6 @@ export default function WelcomeScreen({ navigation }: Props) {
               style={styles.passInput} 
               placeholder="Password" 
               secureTextEntry 
-              keyboardType="numeric"
               value={inputPass}
               onChangeText={setInputPass}
               autoFocus

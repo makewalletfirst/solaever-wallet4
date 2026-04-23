@@ -51,7 +51,6 @@ export default function App() {
         }
       }
       
-      // 생체인식 실패 또는 미지원 시 비밀번호 입력창 표시
       setShowPassModal(true);
     } catch (e) {
       setShowPassModal(true);
@@ -118,7 +117,6 @@ export default function App() {
               style={styles.input} 
               placeholder="Password" 
               secureTextEntry 
-              keyboardType="numeric"
               value={inputPass}
               onChangeText={setInputPass}
             />
