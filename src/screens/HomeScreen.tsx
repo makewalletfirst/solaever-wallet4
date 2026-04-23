@@ -80,7 +80,7 @@ export default function HomeScreen({ navigation, route }: any) {
             <Image 
               source={require('../../assets/solaever_token.png')} 
               style={styles.tokenLogo}
-              resizeMode="cover"
+              resizeMode="contain"
             />
           </View>
           <Text style={styles.balance}>{balance !== null ? `${balance.toLocaleString()} SLE` : '---'}</Text>
@@ -114,10 +114,10 @@ export default function HomeScreen({ navigation, route }: any) {
         </TouchableOpacity>
       </View>
 
-      {/* 니모닉 확인 모달 */}
+      {/* 니모닉 확인 모달 (div -> View로 수정) */}
       <Modal visible={isMnemonicVisible} transparent animationType="fade">
         <View style={styles.modalBg}>
-          <div style={styles.modalContent}>
+          <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Your Mnemonic</Text>
             <View style={styles.mnemonicBox}>
               <Text style={styles.mnemonicText}>{mnemonic}</Text>
@@ -128,11 +128,10 @@ export default function HomeScreen({ navigation, route }: any) {
             <TouchableOpacity style={styles.cancelBtn} onPress={() => setMnemonicVisible(false)}>
               <Text>Close</Text>
             </TouchableOpacity>
-          </div>
+          </View>
         </View>
       </Modal>
 
-      {/* 토큰 추가 모달 (생략/유지) */}
       <Modal visible={isAddTokenModalVisible} transparent animationType="slide">
         <View style={styles.modalBg}>
           <View style={styles.modalContent}>
@@ -169,8 +168,8 @@ const styles = StyleSheet.create({
   card: { backgroundColor: '#34c759', borderRadius: 20, padding: 25, marginBottom: 30, elevation: 5 },
   label: { fontSize: 12, color: 'rgba(255,255,255,0.7)', marginBottom: 15 },
   balanceRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
-  tokenLogoContainer: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#fff', justifyContent: 'center', alignItems: 'center', marginRight: 12, overflow: 'hidden' },
-  tokenLogo: { width: 36, height: 36 },
+  tokenLogoContainer: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#fff', justifyContent: 'center', alignItems: 'center', marginRight: 12, overflow: 'hidden', padding: 2 },
+  tokenLogo: { width: '100%', height: '100%' },
   balance: { fontSize: 32, fontWeight: 'bold', color: '#fff' },
   addressRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.2)', paddingTop: 15 },
   address: { flex: 1, fontSize: 12, color: 'rgba(255,255,255,0.8)', fontFamily: 'monospace', marginRight: 10 },
