@@ -6,8 +6,6 @@ import { keypairFromMnemonic } from '../lib/wallet';
 import { getBalance } from '../lib/transfer';
 import { getTokenBalance } from '../lib/token';
 
-const SOLAEVER_TOKEN_IMAGE = require('../../assets/solaever_token.png');
-
 export default function HomeScreen({ navigation, route }: any) {
   const { mnemonic } = route.params;
   const [address, setAddress] = useState('');
@@ -15,6 +13,7 @@ export default function HomeScreen({ navigation, route }: any) {
   const [tokens, setTokens] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [isAddTokenModalVisible, setAddTokenModalVisible] = useState(false);
+  const [isMnemonicVisible, setMnemonicVisible] = useState(false);
   const [newTokenMint, setNewTokenMint] = useState('');
 
   const loadSavedTokens = async (ownerAddr: string) => {
@@ -27,21 +26,6 @@ export default function HomeScreen({ navigation, route }: any) {
       }));
       setTokens(tokenData);
     } catch (e) { console.error(e); }
-  };
-
-  const addToken = async () => {
-    if (!newTokenMint) return;
-    try {
-      const saved = await AsyncStorage.getItem(`tokens_${address}`);
-      const mintList = saved ? JSON.parse(saved) : [];
-      if (!mintList.includes(newTokenMint)) {
-        const newList = [...mintList, newTokenMint];
-        await AsyncStorage.setItem(`tokens_${address}`, JSON.stringify(newList));
-        setNewTokenMint('');
-        setAddTokenModalVisible(false);
-        loadWallet();
-      }
-    } catch (e) { Alert.alert('에러', '토큰 추가 실패'); }
   };
 
   const loadWallet = useCallback(async () => {
@@ -59,9 +43,9 @@ export default function HomeScreen({ navigation, route }: any) {
 
   useEffect(() => { loadWallet(); }, [loadWallet]);
 
-  const copyToClipboard = () => {
-    Clipboard.setString(address);
-    Alert.alert('성공', '주소가 복사되었습니다.');
+  const copyToClipboard = (text: string, label: string) => {
+    Clipboard.setString(text);
+    Alert.alert('성공', `${label}가 복사되었습니다.`);
   };
 
   const onRefresh = async () => {
@@ -76,24 +60,34 @@ export default function HomeScreen({ navigation, route }: any) {
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
     >
       <View style={styles.header}>
-        <Text style={styles.title}>SolaEver</Text>
-        <TouchableOpacity onPress={() => navigation.replace('Welcome')}>
-          <Text style={styles.logoutText}>Logout</Text>
-        </TouchableOpacity>
+        <View style={styles.headerLeft}>
+          <Text style={styles.title}>SolaEver</Text>
+        </View>
+        <View style={styles.headerRight}>
+          <TouchableOpacity onPress={() => setMnemonicVisible(true)} style={styles.mnemonicBtn}>
+            <Text style={styles.mnemonicBtnText}>View Mnemonic</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.replace('Welcome')}>
+            <Text style={styles.logoutText}>Logout</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <View style={styles.card}>
         <Text style={styles.label}>NATIVE BALANCE</Text>
         <View style={styles.balanceRow}>
-          <Image 
-            source={SOLAEVER_TOKEN_IMAGE} 
-            style={styles.tokenLogo}
-          />
+          <View style={styles.tokenLogoContainer}>
+            <Image 
+              source={require('../../assets/solaever_token.png')} 
+              style={styles.tokenLogo}
+              resizeMode="cover"
+            />
+          </View>
           <Text style={styles.balance}>{balance !== null ? `${balance.toLocaleString()} SLE` : '---'}</Text>
         </View>
         <View style={styles.addressRow}>
           <Text style={styles.address} numberOfLines={1} ellipsizeMode="middle">{address}</Text>
-          <TouchableOpacity onPress={copyToClipboard} style={styles.copyBtn}>
+          <TouchableOpacity onPress={() => copyToClipboard(address, "주소")} style={styles.copyBtn}>
             <Text style={styles.copyBtnText}>Copy</Text>
           </TouchableOpacity>
         </View>
@@ -120,12 +114,41 @@ export default function HomeScreen({ navigation, route }: any) {
         </TouchableOpacity>
       </View>
 
+      {/* 니모닉 확인 모달 */}
+      <Modal visible={isMnemonicVisible} transparent animationType="fade">
+        <View style={styles.modalBg}>
+          <div style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Your Mnemonic</Text>
+            <View style={styles.mnemonicBox}>
+              <Text style={styles.mnemonicText}>{mnemonic}</Text>
+            </View>
+            <TouchableOpacity style={styles.actionButton} onPress={() => copyToClipboard(mnemonic, "니모닉")}>
+              <Text style={styles.actionButtonText}>Copy to Clipboard</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.cancelBtn} onPress={() => setMnemonicVisible(false)}>
+              <Text>Close</Text>
+            </TouchableOpacity>
+          </div>
+        </View>
+      </Modal>
+
+      {/* 토큰 추가 모달 (생략/유지) */}
       <Modal visible={isAddTokenModalVisible} transparent animationType="slide">
         <View style={styles.modalBg}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Add SPL Token</Text>
             <TextInput style={styles.input} placeholder="Token Mint Address" value={newTokenMint} onChangeText={setNewTokenMint} autoCapitalize="none" />
-            <TouchableOpacity style={styles.actionButton} onPress={addToken}><Text style={styles.actionButtonText}>Add Token</Text></TouchableOpacity>
+            <TouchableOpacity style={styles.actionButton} onPress={async () => {
+              if (!newTokenMint) return;
+              const saved = await AsyncStorage.getItem(`tokens_${address}`);
+              const mintList = saved ? JSON.parse(saved) : [];
+              if (!mintList.includes(newTokenMint)) {
+                await AsyncStorage.setItem(`tokens_${address}`, JSON.stringify([...mintList, newTokenMint]));
+                setNewTokenMint('');
+                setAddTokenModalVisible(false);
+                loadWallet();
+              }
+            }}><Text style={styles.actionButtonText}>Add Token</Text></TouchableOpacity>
             <TouchableOpacity style={styles.cancelBtn} onPress={() => setAddTokenModalVisible(false)}><Text>Cancel</Text></TouchableOpacity>
           </View>
         </View>
@@ -136,13 +159,18 @@ export default function HomeScreen({ navigation, route }: any) {
 
 const styles = StyleSheet.create({
   container: { padding: 20, backgroundColor: '#f8f9fa', flexGrow: 1 },
-  header: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 40, marginBottom: 20 },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 40, marginBottom: 20 },
+  headerLeft: { flex: 1 },
+  headerRight: { flexDirection: 'row', alignItems: 'center' },
   title: { fontSize: 24, fontWeight: 'bold' },
-  logoutText: { color: '#ff3b30' },
+  logoutText: { color: '#ff3b30', marginLeft: 15 },
+  mnemonicBtn: { backgroundColor: '#e8f5e9', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 5 },
+  mnemonicBtnText: { color: '#34c759', fontSize: 12, fontWeight: 'bold' },
   card: { backgroundColor: '#34c759', borderRadius: 20, padding: 25, marginBottom: 30, elevation: 5 },
-  label: { fontSize: 12, color: 'rgba(255,255,255,0.7)', marginBottom: 10 },
-  balanceRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 15 },
-  tokenLogo: { width: 28, height: 28, marginRight: 10, borderRadius: 14 },
+  label: { fontSize: 12, color: 'rgba(255,255,255,0.7)', marginBottom: 15 },
+  balanceRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
+  tokenLogoContainer: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#fff', justifyContent: 'center', alignItems: 'center', marginRight: 12, overflow: 'hidden' },
+  tokenLogo: { width: 36, height: 36 },
   balance: { fontSize: 32, fontWeight: 'bold', color: '#fff' },
   addressRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.2)', paddingTop: 15 },
   address: { flex: 1, fontSize: 12, color: 'rgba(255,255,255,0.8)', fontFamily: 'monospace', marginRight: 10 },
@@ -160,8 +188,10 @@ const styles = StyleSheet.create({
   historyButton: { borderWidth: 1, borderColor: '#34c759', padding: 15, borderRadius: 15, alignItems: 'center', marginTop: 10 },
   historyButtonText: { color: '#34c759', fontWeight: 'bold' },
   modalBg: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 20 },
-  modalContent: { backgroundColor: '#fff', borderRadius: 20, padding: 20 },
-  modalTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 20 },
+  modalContent: { backgroundColor: '#fff', borderRadius: 20, padding: 25 },
+  modalTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 15 },
+  mnemonicBox: { backgroundColor: '#f0f0f0', padding: 15, borderRadius: 10, marginBottom: 20 },
+  mnemonicText: { fontSize: 16, color: '#333', lineHeight: 24, textAlign: 'center' },
   input: { borderWidth: 1, borderColor: '#ddd', borderRadius: 10, padding: 15, marginBottom: 20 },
   cancelBtn: { alignItems: 'center', marginTop: 15 }
 });
