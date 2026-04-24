@@ -327,7 +327,7 @@ const styles = StyleSheet.create({
   copyBtnText: { color: '#fff', fontSize: 12, fontWeight: 'bold' },
   sectionTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 15, color: '#333' },
   
-  tokenListWrapper: { maxHeight: 150, marginBottom: 10 }, // 최대 2개만 보이도록 높이 축소
+  tokenListWrapper: { maxHeight: 185, marginBottom: 10 }, // 2.5개 정도 보이도록 185px로 조정 (기존 200px)
   tokenItem: { flexDirection: 'row', justifyContent: 'space-between', backgroundColor: '#fff', padding: 15, borderRadius: 12, marginBottom: 10, elevation: 1 },
   tokenSymbol: { fontSize: 16, fontWeight: 'bold', color: '#333' },
   tokenMint: { fontSize: 12, color: '#999' },
