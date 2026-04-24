@@ -60,6 +60,14 @@ export default function HomeScreen({ navigation, route }: any) {
 
   useEffect(() => { loadWallet(); }, [loadWallet]);
 
+  // 자동 새로고침 (5초마다 잔고 업데이트)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      loadWallet();
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [loadWallet]);
+
   const copyToClipboard = (text: string) => {
     Clipboard.setString(text);
     ToastAndroid.show('클립보드에 복사했어요', ToastAndroid.SHORT);
